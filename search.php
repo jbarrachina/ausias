@@ -19,7 +19,7 @@
 
 // incluir la conexión a la base de datos
             include 'conexion.php';
-            $codigo = isset($_GET['code']) ? $_GET['code'] : "657880";
+            $codigo = isset($_GET['code']) ? $_GET['code'] : "657880";//un parámetro
 
 // Elegir los datos que deseamos recuperar de la tabla
             $query = <<<SQL
