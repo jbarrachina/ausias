@@ -19,16 +19,17 @@
 
 // incluir la conexión a la base de datos
             include 'conexion.php';
-            $codigo = isset($_GET['code']) ? $_GET['code'] : "657880"; //un parámetro
+            $codigo = isset($_GET['code']) ? $_GET['code'] : "368921"; //un parámetro
 // Elegir los datos que deseamos recuperar de la tabla
             $query = <<<SQL
-       SELECT com.name, SERIAL, otherserial, glpi_plugin_fusioninventory_inventorycomputercomputers.last_fusioninventory_update, glpi_locations.completename, glpi_computermodels.name, glpi_states.completename
+       SELECT com.name, com.SERIAL, otherserial, glpi_plugin_fusioninventory_inventorycomputercomputers.last_fusioninventory_update, glpi_locations.completename, glpi_computermodels.name, glpi_states.completename, glpi_items_devicememories.size
             FROM glpi_computers com
             LEFT JOIN glpi_plugin_fusioninventory_inventorycomputercomputers ON glpi_plugin_fusioninventory_inventorycomputercomputers.computers_id = com.id
             LEFT JOIN glpi_locations ON com.locations_id = glpi_locations.id
             LEFT JOIN glpi_computermodels ON com.computermodels_id = glpi_computermodels.id
             LEFT JOIN glpi_states ON com.states_id = glpi_states.id
-            WHERE otherserial =  ? AND is_template =0 AND is_deleted = 0
+	    LEFT JOIN glpi_items_devicememories ON glpi_items_devicememories.items_id = com.id
+            WHERE otherserial = ? AND is_template =0 AND com.is_deleted = 0
 SQL;
 //echo $query;
 
@@ -38,7 +39,7 @@ SQL;
                     die('Error de ejecución de la consulta. ' . $conexion->error);
                 }
 // recoger los datos
-                $stmt->bind_result($name, $serial, $otherserial, $fusion_update, $location, $model, $state);
+                $stmt->bind_result($name, $serial, $otherserial, $fusion_update, $location, $model, $state, $ram);
 
 
 //recorrido por el resultado de la consulta
@@ -52,7 +53,11 @@ SQL;
                     echo "<h5>Nº Inventario: $otherserial</h5></div>";
                     echo "<div class='col-md-4'>Última actualización: $fusion_update";
                     echo "<p>Ubicación: $location</p>";
-                    echo "<p>Estado: $state</p></div>";
+                    echo "<p>Estado: $state</p>";
+                    echo "<p>RAM: $ram";
+                    while ($stmt->fetch())
+                            echo " + ". $ram;
+                    echo "</p></div>";
                     echo "</div>";
                 }
                 // end table
