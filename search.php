@@ -12,17 +12,17 @@
         <div class="container">
             <?php
             /*             * *********************************************************
-             * script search.php
+             * script search.php 
              * necesita un parámetro code
              * utiliza la base de datos glpi
              * ********************************************************* */
 
 // incluir la conexión a la base de datos
             include 'conexion.php';
-            $codigo = isset($_GET['code']) ? $_GET['code'] : "368921"; //un parámetro
+            $codigo = isset($_GET['code']) ? $_GET['code'] : "432932"; //un parámetro
 // Elegir los datos que deseamos recuperar de la tabla
             $query = <<<SQL
-       SELECT com.name, com.SERIAL, otherserial, glpi_plugin_fusioninventory_inventorycomputercomputers.last_fusioninventory_update, glpi_locations.completename, glpi_computermodels.name, glpi_states.completename, glpi_items_devicememories.size
+       SELECT com.id, com.name, com.SERIAL, otherserial, glpi_plugin_fusioninventory_inventorycomputercomputers.last_fusioninventory_update, glpi_locations.completename, glpi_computermodels.name, glpi_states.completename, glpi_items_devicememories.size
             FROM glpi_computers com
             LEFT JOIN glpi_plugin_fusioninventory_inventorycomputercomputers ON glpi_plugin_fusioninventory_inventorycomputercomputers.computers_id = com.id
             LEFT JOIN glpi_locations ON com.locations_id = glpi_locations.id
@@ -39,14 +39,14 @@ SQL;
                     die('Error de ejecución de la consulta. ' . $conexion->error);
                 }
 // recoger los datos
-                $stmt->bind_result($name, $serial, $otherserial, $fusion_update, $location, $model, $state, $ram);
+                $stmt->bind_result($pcid, $name, $serial, $otherserial, $fusion_update, $location, $model, $state, $ram);
 
 
 //recorrido por el resultado de la consulta
                 while ($stmt->fetch()) {
                     echo "<div class='row'>";
                     echo "<div class=\"col-md-3\">";
-                    echo "<h2 class=\"bg-primary\">$name</h2></div>";
+                    echo "<h2 class=\"bg-primary\">$pcid  -  $name</h2></div>";
                     echo "<div class=\"col-md-4\">";
                     echo "<h4>Modelo: $model</h4>";
                     echo "<h4>Nº Serie: $serial</h4>";
@@ -56,7 +56,7 @@ SQL;
                     echo "<p>Estado: $state</p>";
                     echo "<p>RAM: $ram";
                     while ($stmt->fetch())
-                            echo " + ". $ram;
+                        echo " + " . $ram;
                     echo "</p></div>";
                     echo "</div>";
                 }
@@ -66,10 +66,49 @@ SQL;
             } else {
                 die('Imposible preparar la consulta. ' . $conexion->error);
             }
+
+            $query = <<<SQL
+                SELECT status, date, glpi_tickets.name, closedate
+                FROM glpi_items_tickets
+                LEFT JOIN glpi_tickets ON tickets_id = glpi_tickets.id
+                WHERE glpi_items_tickets.items_id = ? AND is_deleted = 0
+SQL;
+                    
+            if ($stmt = $conexion->prepare($query)) {
+                $stmt->bind_param('s', $pcid);
+                if (!$stmt->execute()) {
+                    die('Error de ejecución de la consulta. ' . $conexion->error);
+                }
+// recoger los datos
+                $stmt->bind_result($status, $date, $name,  $closedate);
+
+
+//recorrido por el resultado de la consulta
+                while ($stmt->fetch()) {
+                    echo "<div class='row'>";
+                    echo "<div class=\"col-md-2\">";
+                    echo "<h4 class=\"bg-primary\">$status</h4></div>";
+                    echo "<div class=\"col-md-8\">";
+                    echo "<h4>Entrada: $date</h4>";
+                    echo "<h3>$name</h3>";
+                    echo "<h5></h5></div>";
+                    echo "<div class='col-md-2'>Cierre: $closedate </div>";
+                    echo "</div>";
+                }
+                // end table
+
+                $stmt->close();
+            } else {
+                die('Imposible preparar la consulta. ' . $conexion->error);
+            }        
+                    
             ?>
+
+
+
             <p>
                 incidencias a:
-                <a href="mailto:moodle@ausiasmarch.net?Subject=Incidencia: <?= $name.": ".$serial ?>" target="_top">Enviar ... </a>
+                <a href="mailto:moodle@ausiasmarch.net?Subject=Incidencia: <?= $name . ": " . $serial ?>" target="_top">Enviar ... </a>
             </p>
 
 
